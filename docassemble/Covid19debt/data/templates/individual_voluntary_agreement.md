@@ -6,9 +6,13 @@ An individual voluntary arrangement (IVA) is a formal and legally binding agreem
   
   **Is this right for you?**
   
-- Your debts should be to more than £10000 or more, as the cost of IVA usually high, you said **${cost_will}**[BR]
-- If you own a home, most IVA agreements include a requirement for you to get a valuation of your home in the final year. If there is equity in the property, you'll usually need to raise a lump sum to put into the IVA by re-mortgaging your home. Equity is the money you'd make from the sale of a property, after any mortgage or secured loans are paid off. You shouldn't have to sell your home to raise the lump sum. If you think you are being asked to sell your home, get specialist advice straight away. you preference on house is **${home_will}**[BR]
--  Having an IVA may affect any future income or assets that you receive. For example, if you decide to move house while you have an IVA, any money you make from the sale may have to be paid into the IVA. yous said: **${change_will}**
+- Your debts should be to more than £10000 or more, as the cost of IVA usually high, you said **${cost_will}**[BR][BR]
+  
+    
+- If you own a home, most IVA agreements include a requirement for you to get a valuation of your home in the final year. If there is equity in the property, you'll usually need to raise a lump sum to put into the IVA by re-mortgaging your home. Equity is the money you'd make from the sale of a property, after any mortgage or secured loans are paid off. You shouldn't have to sell your home to raise the lump sum. If you think you are being asked to sell your home, get specialist advice straight away. you preference on house is **${home_will}**[BR][BR]  '
+  
+  
+- Having an IVA may affect any future income or assets that you receive. For example, if you decide to move house while you have an IVA, any money you make from the sale may have to be paid into the IVA. yous said: **${change_will}**
   
 ** Debts you can include:**
 
