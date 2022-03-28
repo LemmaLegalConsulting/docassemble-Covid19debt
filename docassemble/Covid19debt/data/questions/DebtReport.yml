@@ -664,7 +664,7 @@ code: |
 id: Selection of type of debt
 question: | 
   % if len(debt.complete_elements()) > 0:
-  What is the ${ ordinal(i) } debt you can tell us about
+  What is the ${ ordinal(debt.current_index()) } debt you can tell us about
   % else:
   What is the first debt you can tell us about?
   % endif
@@ -1265,7 +1265,7 @@ code: |
   if not defined('x.notes'):
     x.notes = ""
   if x.delinquent:
-    x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
+    x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
     x.notes += "NOT DELINQUENT"
   x.notes_finished = True
@@ -1277,7 +1277,7 @@ id: notes for Pawnbroker
 generic object: Pawnbroker
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
+    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
     x.notes = "NOT DELINQUENT  "
   if x.for_essential_services:
@@ -1293,7 +1293,7 @@ id: notes for HirePurchase
 generic object: HirePurchase
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
+    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
     x.notes = "NOT DELINQUENT  "
   if x.for_essential_services:
@@ -1327,7 +1327,7 @@ id: notes for Mortgage
 generic object: Mortgage
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
+    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
     x.notes = "NOT DELINQUENT  "
   if x.is_current_home:
@@ -1347,7 +1347,7 @@ code: |
 	else:
 		x.notes = "Business no longer trades.  "
 	if x.delinquent:
-		x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
+		x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
 	else:
 		x.notes += "NOT DELINQUENT"
   x.notes_finished = True
