@@ -888,7 +888,7 @@ code: |
 ---
 if: number_of_emergency_choices == 1
 generic object: Debt
-question: Are you at risk of ${ i } for ${ x.name }?
+question: Are you at risk of ${ i } for ${ x.name.lower() }?
 subquestion: |
   
 fields:
@@ -903,7 +903,7 @@ fields:
 ---
 if: number_of_emergency_choices > 1
 generic object: Debt
-question: Are you at risk of any of the following relating to ${ x.name }? 
+question: Are you at risk of any of the following relating to ${ x.name.lower() }? 
 subquestion: |
   Check all that apply
   
@@ -1171,34 +1171,34 @@ fields:
 back button: True
 ---
 generic object: Debt
-question: More information about ${ x.name }
+question: More information about ${ x.name.lower() }
 fields:
   - Is the debt needed to pay essential services?: x.for_essential_services
     datatype: yesnoradio
 back button: True
 ---
 generic object: Debt
-question: More information about ${ x.name }
+question: More information about ${ x.name.lower() }
 fields:
   - Are you at risk of losing essential goods because of the enforcement of this debt?: x.risk_of_losing_essential_goods
     datatype: yesnoradio
 back button: True
 ---
 generic object: Debt
-question: More information about ${ x.name }
+question: More information about ${ x.name.lower() }
 fields:
   - What date was the overpayment awarded?: x.date_of_award
     datatype: date
 ---
 generic object: Debt
-question: More information about ${ x.name }
+question: More information about ${ x.name.lower }
 fields:
   - Have you been awarded or migrated to universal credit?: x.awarded_or_migrated_to_universal_credit
     datatype: yesnoradio
 back button: True
 ---
 generic object: Debt
-question: More information about ${ x.name }
+question: More information about ${ x.name.lower() }
 fields:
   - Has the business continued trading?: x.continue_trading
     datatype: yesnoradio

@@ -8,4 +8,4 @@ In this section we will ask:
 - Your work situation 
 - About your housing situation
 - About your family 
-- Prior debt 
+- Prior debt solutions you might have used
