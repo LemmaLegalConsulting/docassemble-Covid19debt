@@ -591,7 +591,7 @@ section: personal_info
 question: | 
   Are you going through a {formal insolvency procedure} right now?
 subquestion: | 
-  Select the insovlency procedure you are going through right now. 
+  Select the insolvency procedure you are going through right now. 
   
   It is important to know whether you are currently in a formal insolvency procedure as some of the debt solutions may not be available to you. Bring this up with a debt specialist when you consult them. 
 field: another_debt_solution
@@ -750,7 +750,7 @@ code: |
   x.urgency
   x.priority
   x.details
-  x.notes
+  x.notes_finished
   x.complete = True
 ---
 ################ X.TYPE ##################
@@ -1252,7 +1252,9 @@ back button: True
 ---
 ######################### X.NOTES ##########################
 comment: |
-	Priority
+	This section creates a notes attribute, which collects the attributes specific to that debt type.
+	The depends on section should list every variable used in the formula, so that notes is recalculated any time any of those variables change.
+	.notes_finished is used because the interview had an "Input not processed" error, which seems like it was caused by the .notes being defined in the block until it reaches a variable that has not been defined, then the interview tries to define that variable, but then the interview does not need to go back to the block because x.notes is set, even though it didn't get all the way through the block.
 ---
 depends on:
   - x.delinquent
@@ -1266,6 +1268,7 @@ code: |
     x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
   else:
     x.notes += "NOT DELINQUENT"
+  x.notes_finished = True
 ---
 depends on:
   - x.delinquent
@@ -1281,6 +1284,7 @@ code: |
   	x.notes += "For essential goods."
   else:
   	x.notes += "Fon non-essential goods."
+  x.notes_finished = True
 ---
 depends on:
   - x.delinquent
@@ -1296,6 +1300,7 @@ code: |
   	x.notes += "For essential goods."
   else:
   	x.notes += "For non-essential goods."
+  x.notes_finished = True
 ---
 depends on:
   - x.delinquent
@@ -1305,13 +1310,14 @@ id: notes for CreditCardDebt
 generic object: CreditCardDebt
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
+    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
     x.notes = "NOT DELINQUENT  "
-  if x.goods_as_described:
+  if not x.goods_as_described:
   	x.notes += "Includes payments for misrepresented goods.  "
-  if x.goods_satisfactory_quality:
+  if not x.goods_satisfactory_quality:
   	x.notes += "Includes payments for shoddy goods.  "
+  x.notes_finished = True
 
 ---
 depends on:
@@ -1328,6 +1334,7 @@ code: |
   	x.notes += "For current home."
   else:
   	x.notes += "Not for current home."
+  x.notes_finished = True
 ---
 depends on:
   - x.delinquent
@@ -1343,6 +1350,7 @@ code: |
 		x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
 	else:
 		x.notes += "NOT DELINQUENT"
+  x.notes_finished = True
 ---
 depends on:
   - x.date_of_award
@@ -1355,6 +1363,7 @@ code: |
 		x.notes += user.name.full() + " has been awarded or migrated to universal credit."
 	else:
 		x.notes += user.name.full() + " has not been awarded or migrated to universal credit."
+  x.notes_finished = True
 ---
 depends on:
   - x.money_in_account
@@ -1365,6 +1374,7 @@ code: |
 		x.notes = "Currently money in account at risk."
 	else:
 		x.notes = "No money currently in account."
+  x.notes_finished = True
 ---
 depends on:
   - x.court_action
@@ -1378,6 +1388,7 @@ code: |
 		  x.notes += "Risk of losing essential goods."
 	else:
 		x.notes = "No court action."
+  x.notes_finished = True
 ---
 depends on:
   - x.possession_order
@@ -1400,6 +1411,7 @@ code: |
   	x.notes += "For current home."
   else:
   	x.notes += "Not for current home."
+  x.notes_finished = True
 ---
 ######################### DEBT SUMMARY ##########################
 comment: |
