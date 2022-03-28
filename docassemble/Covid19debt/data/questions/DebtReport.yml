@@ -285,13 +285,12 @@ code: |
 ---
 id: emergency debt code 
 code: | 
-  emergency_debts = debt.filter(urgency="")
+  nonemergency_debts = debt.filter(urgency="None")
 ---
 id: non emergency debt code
 code: |
-	nonemergency_debts = debt
-  for d in emergency_debts:
-    nonemergency_debts.pop(d)
+	emergency_debts = debt.filter(urgency!="None")
+
 ---
 id: personal information block
 section: personal_info
@@ -1400,9 +1399,9 @@ id: notes for RentDebt
 generic object: RentDebt
 code: |
   if x.possession_order:
-  	"REPOSSESSION scheduled for " + format_date(x.repossession_date) + ",  "
+  	x.notes = "REPOSSESSION scheduled for " + format_date(x.repossession_date) + ",  "
   else:
-  	"No repossession scheduled.  "
+  	x.notes = "No repossession scheduled.  "
   if x.delinquent:
     x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
   else:
@@ -1438,10 +1437,6 @@ code: |
   else:
     undefine('debt.there_is_anotherstep')
     debt.there_is_another = False
----
-id: priority debt type list
-code:  |
-  priority_debt_type_list = ['Rent arrears','Mortgage arrears','Council Tax', 'Energy bill arrears','Mobile phone arrears','TV license','Court Fine/ Penalty charge','Child maintenance/child support agency debts','Fine','HMRC tax debt','Universal credit advance']
 ---
 id: table for debt list
 table: debt.table
