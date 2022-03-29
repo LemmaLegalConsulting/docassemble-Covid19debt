@@ -604,23 +604,25 @@ subquestion: |
   Select the insolvency procedure you are going through right now. 
   
   It is important to know whether you are currently in a formal insolvency procedure as some of the debt solutions may not be available to you. Bring this up with a debt specialist when you consult them. 
-field: another_debt_solution
-choices: 
-  - Debt Relief Order: Debt Relief Order 
-    help: |
-      A Debt Relief Order (DRO) are 12-month moratorium, during which time creditors cannot in force you to pay the debts included in the DRO.
-  - Bankruptcy: Bankruptcy
-    help: |
-       Bankruptcy is a legal proceeding involving a person or business that is unable to repay their outstanding debts.
-  - Individual Voluntary Arrangement: Individual Voluntary Arrangement
-    help: |
-      An Individual Voluntary Arrangement is a formal arrangement made between you and the creditor that creates a legally binding agreement. This agreement allows you to defer payment of your debts and/or the creditors to accept less than 100 per cent of the debts. 
-  - Administration Order: Administration Order  
-    help: |
-       An administration order is a county court order that prevents individual creditors from taking enforcement action without permission from the court and  requires that all your debts be dealt with together. An administration order can include a composition under which you are required to pay less than 10 pence in the pound in satisfaction of your debts
-  - None: None 
+fields:
+	- no label: another_debt_solution
+		datatype: checkboxes
+		code: |
+			debt_solutions_code
 back button: True
-continue button field: current_insolvency    
+continue button field: current_insolvency 
+---
+code: |
+	debt_solutions_code = [
+													{'Debt Relief Order': "Debt Relief Order",
+													 'help': "A Debt Relief Order (DRO) are 12-month moratorium, during which time creditors cannot in force you to pay the debts included in the DRO."},
+													{'Bankruptcy': "Bankruptcy",
+													 'help': "Bankruptcy is a legal proceeding involving a person or business that is unable to repay their outstanding debts."},
+													{'Individual Voluntary Arrangement': "Individual Voluntary Arrangement",
+													 'help': "An Individual Voluntary Arrangement is a formal arrangement made between you and the creditor that creates a legally binding agreement. This agreement allows you to defer payment of your debts and/or the creditors to accept less than 100 per cent of the debts."},
+													{'Administration Order': "Administration Order",
+													 'help': "An administration order is a county court order that prevents individual creditors from taking enforcement action without permission from the court and  requires that all your debts be dealt with together. An administration order can include a composition under which you are required to pay less than 10 pence in the pound in satisfaction of your debts"}
+												]
 ---
 id: homeowner code
 code:  |
@@ -1790,7 +1792,7 @@ section: income
 fields:
   - What type of income is it?: other_income[i].type
     code: |
-      income_type_list()
+      other_income_type_list
   - Amount: other_income[i].value 
     datatype: currency
     min: 0
@@ -1799,6 +1801,9 @@ fields:
     datatype: number
     code: |
       period_list()
+---
+code: |
+  other_income_type_list = ["Disability benefits", "Other benefits", "Private pensions", "Self-employed income", "State pension plus any IS/PC", "Tax credits", "Other"]
 ---
 id: other income summary
 question: Other income
