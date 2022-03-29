@@ -90,7 +90,7 @@ code: |
     user.renting_status 
     if share_housing == True: 
       if renting_household == True: 
-        joint_tenancy_explained
+        user.house_status_rentshare
   if user.house_status == 'Homeowner':
     mortgage_questions
     if user.homeowner_status == 'Joint Mortgage':
@@ -142,9 +142,11 @@ code: |
 comment: |
   add_review_to_menu will add a Review Answers option to the menu bar you can find by clicking on the upper right corner.  The initial block will be rerun every time there's a new screen, so originally this block will set it to false and the option will not be added.  (This block needs to be below the interview order so that this block defines add_review_to_menu first.  After "add_review_to_menu" is reached in the interview order, it will go to the next section "summary" before it reruns a screen, so this page will not have the Review Answers option.  The next page will be the first page where add_review_to_menu is set to True when the initial block is run.
 ---
+comment: |
+  This creates the overview of the interview flow on the left side of the screen. It's important that the variables (the word before the colon) do not share the same name as other variables, such as templates or events.
 sections:
-  - introduction: Introduction
-  - preparation: Get Ready
+  - introduction_section: Introduction
+  - preparation_section: Get Ready
   - personal_info: Your Information
   - debt_info: Debt Information
   - finance_info: Your Finances
@@ -154,10 +156,15 @@ sections:
     - summary: Summary 
   - breathing_space: Breathing Space
     subsections:
-     - standard_bs: Standard Breathing Space
-     - mentalh_bs: Mental Health Breathing Space
+     - standard_bs_section: Standard Breathing Space
+     - mentalh_bs_section: Mental Health Breathing Space
   - debt_solutions_section: Debt Solutions
   - conclusions: Print your document
+---
+###################### IN-INTERVIEW TEMPLATES ###############################
+comment: |
+  Templates for information that appear in the interview are in markdown files in the Templates folder of the package.  These are separated from the interview because it may be easier to share individual files with substance matter experts that can help with the content, potentially with the help of online WYSIWYG Markdown editors.  If this isn't the case, it may be easier to move this content back into this interview.
+  Templates included in the final documents are below.
 ---
 template: introduction
 content file: introduction.md
@@ -171,20 +178,8 @@ content file: standard_bs.md
 template: mentalh_bs
 content file: mentalh_bs.md
 ---
-template: bankruptcy_information
-content file: bankruptcy_information.md
----
-template: debt_relief_order
-content file: debt_relief_order.md
----
-template: administration_order
-content file: administration_order.md
----
 template: debt_management_plan
 content file: debt_management_plan.md
----
-template: individual_voluntary_agreement
-content file: individual_voluntary_agreement.md
 ---
 template: debt_information_signpost
 content file: debt_information_signpost.md
@@ -198,12 +193,11 @@ content file: personal_information_signpost.md
 template: bs_solutions_signpost
 content file: solutions_signpost.md
 ---
-#template: 
-#content file: 
-#---
-#template: 
-#content file: 
+
+
 ---
+comment: |
+	It's better to use debt.total() than debt_total, but this block catches any place in the interview or templates that still uses debt_total.
 id: debt_total backup
 code: |
   debt_total = debt.total()
@@ -213,8 +207,10 @@ features:
   small screen navigation: dropdown
   progress bar: True
 ---
+comment: |
+	As mentioned above, this block uses the template variable "introduction", which uses the content file "introduction.md".  This allows future maintainers and collaborators to update the text in this section without editing the whole interview.  If that's not convenient, then text in introduction.md could be moved back here.
 id: introduction block
-section: introduction
+section: introduction_section
 decoration: receipt
 question: |
   Create a brief to organize your debts 
@@ -233,7 +229,7 @@ fields:
 continue button field: user_saw_introduction
 ---
 id: preparation block
-section: preparation
+section: preparation_section
 question:  |
   Get your information and documents ready  
 subquestion:  |
@@ -273,6 +269,18 @@ subquestion: |
 continue button field: finance_signpost 
 back button: True
 ---
+######################### DEBT FILTERING #########################
+comment: |
+	This section filters debts into three groups: 
+	 1 emergency priority and non-priority debts, 
+	 2 priority debts, and 
+	 3 non-priority debts.
+	These variables are called by the debt_report.docx
+	
+	How a debt is determined to belong in the emergency debt is described in the .URGENCY section below.
+	
+	The priority determination is described in .PRIORITY.
+---
 comment: |
   priority_debts is calculated by filtering debt, which makes priority_debts also a ValueListNoObject class object.
 id: priority debt code
@@ -291,14 +299,9 @@ id: emergency debt code
 code: |
 	emergency_debts = debt.filter(urgency_boolean = True)
 ---
-id: changes urgency to True or False
-depends on:
-  - debt[i].urgency
-code: |
-  if debt[i].urgency == "None":
-  	debt[i].urgency_boolean = False
-  else:
-  	debt[i].urgency_boolean = True
+##################### USER INFORMATION ##################
+comment: |
+  User information is gathered in a fairly standard docassemble way, which is designed to be self-explanatory.  User variables can be found in the airtable at 
 ---
 id: personal information block
 section: personal_info
@@ -510,7 +513,7 @@ subquestion: |
   
   If you have a joint tenancy, you are liable for the rent both jointly and individually. This means that one or all of you can be held responsible for the whole rent. 
 fields: 
-  - Joint tenancy explaination: joint_tenancy_explained
+  - Joint tenancy explaination: user.house_status_rentshare
     required: False
     datatype: area
     hint: |
@@ -729,17 +732,6 @@ code: |
   debt[i].type = temp_type
   undefine('temp_type')
 ---
-id: debt amount
-generic object: Debt
-question: | 
-  How much is owed on this ${ x.name.lower() } debt?
-fields:
-  - Amount: x.value
-    datatype: currency 
-    min: 0
-    currency symbol: £
-back button: True
----
 ################ COMPLETING DEBT ##################
 comment: |
   The Debt list uses the "complete_attribute" feature for lists, where the interview will seek to define .complete gor each debt.  
@@ -947,7 +939,16 @@ comment: |
   The only time that the interview will look for x.emergency_dict.new_item_name is when number of emergency choices is 1.
 generic object: Debt
 code: |
-  x.emergency_dict.new_item_name = x.emergency_choices[0]  
+  x.emergency_dict.new_item_name = x.emergency_choices[0]
+---
+id: changes urgency to True or False
+depends on:
+  - debt[i].urgency
+code: |
+  if debt[i].urgency == "None":
+  	debt[i].urgency_boolean = False
+  else:
+  	debt[i].urgency_boolean = True
 ---
 ################### EMERGENCY CHOICES FOR X.URGENCY #####################
 generic object: Debt
@@ -1620,7 +1621,7 @@ under: |
 	${ expenses.table }
 ---
 id: breathing space description
-section: standard_bs
+section: standard_bs_section
 question:  |
   Breathing space 
 subquestion:  |
@@ -1629,7 +1630,7 @@ back button: True
 continue button field: user_saw_standard_bs
 ---
 id: mental health breathing space description
-section: mentalh_bs
+section: mentalh_bs_section
 question:  |
   Mental health breathing space 
 subquestion:  |
@@ -1638,7 +1639,7 @@ back button: True
 continue button field: user_saw_mentalh_bs
 ---
 id: personal finance  signpost 
-section: 
+section: finance_info
 question: | 
   Personal finance
 subquestion: | 
@@ -2534,16 +2535,26 @@ section: conclusions
 decoration: file-download
 event: letter_and_end
 allow downloading: True
+include download tab: False
 question: |
-  Below is your document with your instructions for next steps and and information about debt solutions. 
+  Download your document 
 subquestion: | 
+  Below is your document. It includes: 
+  [BR]
   
-  Click the below image to open your document [BR]
+    * Instructions for your next steps;
+    * An organized brief with your information about your debts, income, assets and expenses; and 
+    * Information about potential debt solutions.
+  
+  Click the image below to view your document [BR]
+  [BR]
+  Download all of your documents at the bottom of the page. 
+  [BR]
   [BR]
   ${ pdf_concatenate([instructions_sheet, debt_brief, debt_solutions_sheet])}
-  
+  [BR] 
   Click "Back" if you need to make any changes.  
-  Click "Send to court" to deliver it.
+
 attachment code: |
   [instructions_sheet, debt_brief, debt_solutions_sheet]
 buttons:
@@ -2553,7 +2564,7 @@ back button: True
 ---
 id: debt brief
 attachment:
-  - name: Personal Debt Advisor
+  - name: Personal Debt Brief
     filename: Debt Brief 
     variable name: debt_brief
     valid formats:
@@ -2580,6 +2591,34 @@ attachment:
       - docx
       - pdf
     docx template file: debt_solutions.docx
+--- 
+id: individual_voluntary_agreement docx 
+attachment: 
+  - name: IVA 
+    filename: IVA
+    variable name: individual_voluntary_agreement
+    docx template file: individual_voluntary_agreement.docx
+---
+id: debt_relief_order docx 
+attachment: 
+  - name:: DRO 
+    filename: DRO 
+    variable name: debt_relief_order
+    docx template file: debt_relief_order.docx
+---
+id: bankruptcy_information docx 
+attachment: 
+  - name: bankruptcy details 
+    filename: bankruptcy details 
+    variable name: bankruptcy_information
+    docx template file: bankruptcy_information.docx
+--- 
+id: administration_order docx 
+attachment: 
+  - name: admin order 
+    filename: admin order 
+    variable name: administration_order
+    docx template file: administration_order.docx
 ---
 ########################## DEBT DICTIONARY ##########################
 comment: |
