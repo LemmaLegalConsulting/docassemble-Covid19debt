@@ -283,14 +283,22 @@ id: nonpriority debt code
 code: |
   nonpriority_debts = nonemergency_debts.filter(priority=False)
 ---
-id: emergency debt code 
+id: non emergency debt code 
 code: | 
-  nonemergency_debts = debt.filter(urgency="None")
+  nonemergency_debts = debt.filter(urgency_boolean = False)
 ---
-id: non emergency debt code
+id: emergency debt code
 code: |
-	emergency_debts = debt.filter(urgency!="None")
-
+	emergency_debts = debt.filter(urgency_boolean = True)
+---
+id: changes urgency to True or False
+depends on:
+  - debt[i].urgency
+code: |
+  if debt[i].urgency == "None":
+  	debt[i].urgency_boolean = False
+  else:
+  	debt[i].urgency_boolean = True
 ---
 id: personal information block
 section: personal_info
