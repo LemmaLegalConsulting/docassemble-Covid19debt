@@ -851,6 +851,15 @@ fields:
 	  	- A magistrate's court
 back button: True
 ---
+id: .creditor for Traffic Fines
+generic object: NationalTax
+question: | 
+  Who is enforcing the traffic fine?
+fields:
+	- Creditor name: x.creditor
+	  default: The Crown
+back button: True
+---
 ######################### X.COURT_ACTION ##########################
 comment: |
 	Priority
