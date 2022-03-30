@@ -632,7 +632,7 @@ code:  |
   if user.house_status == "Mortgaged" or  user.house_status == "Owns property outright":
     is_homeowner = "Is a Homeowner"
   for item in debt:
-    if item.urgency =="Court Action":
+    if item.court_action:
       court_case = False
       is_court_debt ="Have a Court Action"
 ---
@@ -1357,18 +1357,13 @@ code: |
 ---
 depends on:
   - x.delinquent
-  - x.continue_trading
 id: notes for ConsumerDebt
 generic object: ConsumerDebt
 code: |
-	if x.continue_trading:
-	  x.notes = "Business continues to trade.  "
-	else:
-		x.notes = "Business no longer trades.  "
 	if x.delinquent:
-		x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
+		x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
 	else:
-		x.notes += "NOT DELINQUENT"
+		x.notes = "NOT DELINQUENT"
   x.notes_finished = True
 ---
 depends on:
@@ -1393,6 +1388,17 @@ code: |
 		x.notes = "Currently money in account at risk."
 	else:
 		x.notes = "No money currently in account."
+  x.notes_finished = True
+---
+depends on:
+  - x.continue_trading
+id: notes for ValueAddedTax
+generic object: ValueAddedTax
+code: |		
+	if x.continue_trading:
+		x.notes = "Business continues to trade."
+	else:
+		x.notes = "Business no longer trades."
   x.notes_finished = True
 ---
 depends on:
