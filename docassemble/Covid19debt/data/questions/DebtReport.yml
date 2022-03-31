@@ -1659,13 +1659,6 @@ subquestion:  |
 back button: True
 continue button field: user_saw_mentalh_bs
 ---
-id: personal finance  signpost 
-section: finance_info
-question: | 
-  Personal finance
-subquestion: | 
-  ${ personal_finance_signpost } 
----
 ############################## INCOME COLLECTION #################################
 comment: |
 ---
@@ -1896,7 +1889,9 @@ fields:
       is: vehicle
 reconsider:
   - income_assets    
-
+---
+############################### EXPENSES ###################################
+comment: |
 ---
 id: expense information collection
 question: |
@@ -2239,20 +2234,16 @@ subquestion:  |
   You told us about ${len(debt)} debts. In total you have  ${currency(debt.total())} debt. 
 
 
-#  ####### Revisit and edit your data by clicking on the menu at sections accordingly.
-#review:
-#  - Update:
-#     - month_disposble_income
-#     - is_court_debt
-#     - is_homeowner
-#    button:  |
-#       Update to see most recent data by clicking on:
 back button: True
 continue button field: summary
 ---
 id: monthly disposable income calculation
 code:  |
   month_disposble_income = jobs.total(period_to_use=12) + other_income.total(period_to_use=12) + income_assets.total(period_to_use=12)- expenses.total(period_to_use=12)
+---
+################################# PREFERENCES ###################################
+comment: |
+  
 ---
 id: preferences information collection
 question:  |
@@ -2361,14 +2352,12 @@ subquestion: |
     
   % endfor
   
-#review:
-#  - Re-evaluate:
-#     - month_disposble_income
-#     - is_court_debt
-#     - is_homeowner
-#    button:  |
 back button: True
 continue button field: user_saw_debt_solutions
+---
+######################### UNUSED EVENTS #################################
+comment: |
+  I believe these events are unused.  The starting version of the interview used these events in a clever way to put more information that the user could click to.  We moved this information to a pdf print-out a user could take with them and no longer use the events.
 ---
 id: bankruptcy relevant description
 section: debt_solutions_section
@@ -2414,24 +2403,6 @@ question:  |
 subquestion:  |
   ${ debt_management_plan }
 continue button field: user_saw_intro
----
-terms:  
-  unsecured debts:  |
-    An unsecured debt is a debt for which the creditor does not have a security interest in collateral, and the creditor is therefore not entitled to take property from you to satisfy that debt without a judgment.
-    
-    Common types of unsecured debt are credit cards, medical bills, most personal loans, and student loans*. These debts help you do something (buy items, pay your doctor, get an education), but they are not backed by a specific asset.
-  secured debts:  |
-    A secured debt is a debt for which the creditor has a security interest in collateral, meaning the creditor has a right to take property to satisfy the debt.
-    
-  disposable income: | 
-    Disposable income is the amount of money you have left to spend from your income after meeting your expenses for your needs 
-
-  formal insolvency procedure: | 
-    Someone is said to be ‘insolvent’ if they are unable to pay their debts as they fall due. There are four ways in which you can reach a formal arrangement with your creditors to resolve your financial problems. 
-
-  possession order: | 
-    Possession orders is a court order that requires a tenant to leave the property by a given date.
-  
 ---
 id: debt relief order not relevant description
 section:  debt_solutions_section
@@ -2484,6 +2455,28 @@ subquestion:  |
 
 continue button field: user_saw_intro
 ---
+###################### TERMS ####################
+comment: |
+  Terms were popular in user testing and probably should be developed further.  The code for this block could be created in the variables table of the Airtable.
+terms:  
+  unsecured debts:  |
+    An unsecured debt is a debt for which the creditor does not have a security interest in collateral, and the creditor is therefore not entitled to take property from you to satisfy that debt without a judgment.
+    
+    Common types of unsecured debt are credit cards, medical bills, most personal loans, and student loans*. These debts help you do something (buy items, pay your doctor, get an education), but they are not backed by a specific asset.
+  secured debts:  |
+    A secured debt is a debt for which the creditor has a security interest in collateral, meaning the creditor has a right to take property to satisfy the debt.
+    
+  disposable income: | 
+    Disposable income is the amount of money you have left to spend from your income after meeting your expenses for your needs 
+
+  formal insolvency procedure: | 
+    Someone is said to be ‘insolvent’ if they are unable to pay their debts as they fall due. There are four ways in which you can reach a formal arrangement with your creditors to resolve your financial problems. 
+
+  possession order: | 
+    Possession orders is a court order that requires a tenant to leave the property by a given date.
+  
+---
+####################### DEBT SOLUTION LOGIC ##############################
 id: debt solutions filtering
 code:  |
   Available_solutions = debt_solutions.slice(lambda y: y.match_dict.all_false())
@@ -2511,6 +2504,43 @@ code:  |
   
  
 ---
+#################### PREDOCX VARIABLES ################################
+comment: |
+id: collect variables before docx assembled
+code: |
+  total_annual_income
+  total_assets
+  total_expenses
+  emergency_debts
+  for deb in debt:
+    deb.urgency_boolean
+    deb.top_type
+  priority_debts
+  nonemergency_debts
+  nonpriority_debts
+  home_will
+  debt_total
+  debt_solutions_details_added
+  predocx_variables = True
+---
+id: total income calculation
+code: |
+  total_annual_income = currency(jobs.total() + other_income.total() + income_assets.total())
+---
+comment: |
+  We should eliminate the use of total_assets but keeping this block in here as backup.
+id: format total assets as currency
+code: |
+  total_assets = currency(assets.total())
+---
+comment: |
+  We should eliminate the use of total_expenses but keeping this block in here as backup.
+id: format total expenses as currency
+code: |
+  total_expenses = currency(expenses.total())
+---
+##################### UNUSED UPLOAD AND SIGNATURE #############################
+comment: |
 id: make pdf
 code: |
   uploaded_file.make_ocr_pdf() 
@@ -2538,34 +2568,7 @@ section: Signatures
 signature: your_signature
 continue button field: user_signed
 ---
-id: collect variables before docx assembled
-code: |
-  total_annual_income
-  total_assets
-  total_expenses
-  emergency_debts
-  for deb in debt:
-    deb.urgency_boolean
-    deb.top_type
-  priority_debts
-  nonemergency_debts
-  nonpriority_debts
-  home_will
-  debt_total
-  predocx_variables = True
----
-id: total income calculation
-code: |
-  total_annual_income = currency(jobs.total() + other_income.total() + income_assets.total())
----
-id: format total assets as currency
-code: |
-  total_assets = currency(assets.total())
----
-id: format total expenses as currency
-code: |
-  total_expenses = currency(expenses.total())
----
+####################### FINAL DOCUMENT AND DOCX TEMPLATES ##################
 id: final document
 section: conclusions
 decoration: file-download
@@ -2988,12 +2991,13 @@ code: |
       },
     }
 ---
-mandatory: True
+comment: |
 code: | 
   debt_solutions['Bankruptcy']['details'] = bankruptcy_information
   debt_solutions['Administration Order']['details'] = administration_order
   debt_solutions['Individual Voluntary Agreement']['details'] = individual_voluntary_agreement
   debt_solutions['Debt Relief Order']['details'] = debt_relief_order 
+  debt_solutions_details_added = True
 ---
 ########################## DEBT SOLUTIONS DICTIONARY ##########################
 comment: |
