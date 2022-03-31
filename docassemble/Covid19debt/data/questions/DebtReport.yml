@@ -2991,6 +2991,7 @@ code: |
       },
     }
 ---
+########################## DEBT SOLUTIONS DICTIONARY ##########################
 comment: |
 code: | 
   debt_solutions['Bankruptcy']['details'] = bankruptcy_information
@@ -2999,7 +3000,6 @@ code: |
   debt_solutions['Debt Relief Order']['details'] = debt_relief_order 
   debt_solutions_details_added = True
 ---
-########################## DEBT SOLUTIONS DICTIONARY ##########################
 comment: |
   This dictionary of debt solutions can be created with Airtable.
   
