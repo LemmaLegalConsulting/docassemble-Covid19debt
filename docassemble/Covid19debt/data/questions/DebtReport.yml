@@ -1478,6 +1478,10 @@ require gathered: False
 edit:
 	- review_variable
 ---
+############################## REVIEW TABLE ##############################
+comment: |
+	
+---
 event: debt[i].review_variable
 question: |
 	Review ${ debt[i].name }
@@ -1661,6 +1665,9 @@ question: |
   Personal finance
 subquestion: | 
   ${ personal_finance_signpost } 
+---
+############################## INCOME COLLECTION #################################
+comment: |
 ---
 id: type of income information selection
 question:  |
@@ -2536,6 +2543,15 @@ code: |
   total_annual_income
   total_assets
   total_expenses
+  emergency_debts
+  for deb in debt:
+  	deb.urgency_boolean
+  	deb.top_type
+	priority_debts
+	nonemergency_debts
+	nonpriority_debts
+	home_will
+	debt_total
   predocx_variables = True
 ---
 id: total income calculation
