@@ -1,0 +1,269 @@
+---
+########################## DEBT SOLUTIONS DICTIONARY ##########################
+comment: |
+  This block sets 'details' to the right docx template variable, because this does not work in the data from code block.  I removed a Mandatory: True because it wasn't being used - this block was being called by the final letter docx template before it would call it because it was mandatory.  I included it in the predocx variables code, but it doesn't appear to make a difference in processing time.
+code: | 
+  debt_solutions['Bankruptcy']['details'] = bankruptcy_information
+  debt_solutions['Administration Order']['details'] = administration_order
+  debt_solutions['Individual Voluntary Agreement']['details'] = individual_voluntary_agreement
+  debt_solutions['Debt Relief Order']['details'] = debt_relief_order 
+  debt_solutions_details_added = True
+---
+comment: |
+  This dictionary of debt solutions can be created with Airtable.
+  
+  
+id: Debt Solutions 
+variable name: debt_solutions
+use objects: True
+data from code:
+  Bankruptcy:
+    title: | 
+      "Bankruptcy" 
+    blurb: | 
+      "Bankruptcy is a form of insolvency and is normally only suitable if you can’t pay back your debts in a reasonable time. When you go bankrupt almost all of your debts are written off. Deciding to go bankrupt is a big step that involves fees and can impact different areas of your life, such as your job or home."
+    cost: 680
+    credit rating: |
+      "Strongly Affected"
+    duration in months: 12
+    home: | 
+      "risk"
+    requirements:
+      Minimum Amount:
+        formula_value: 750
+      Maximum Assets:
+        formula_value: 1000000
+  Debt Relief Order:
+    title: | 
+      "Debt Relief Order"
+    blurb: | 
+      "You do not have to make payments towards most types of debt included in your debt relief order and your creditors can’t force you to pay off the debts. A debt relief order usually lasts a year unless your situation improves. When the debt relief order ends, most of your debts will be written off. " 
+    cost: 90
+    credit rating: |
+      "affected"
+    duration in months: 12
+    home: |
+      "safe"
+    requirements:
+      Maximum Income:
+        formula_value: 75
+      Maximum Assets:
+        formula_value: 2000
+      Nonhomeowner:
+        formula_value: |
+          ["Homeowner"]
+      Maximum Amount:
+        formula_value: 30000
+  Administration Order:
+    title: | 
+      "Administration Order"
+    blurb: | 
+      "An administration order is a formal, legal debt solution which means it's approved by the court and your creditors have to stick to it. It requires two or more debts, yout debts no more than 5000 pounds in total, and a court judgement, if you don’t have a county court judgment or high court judgment, you need to wait for one of your creditors to take court action against you. As soon as judgment is entered you can apply for an administration order." 
+    cost: .1
+    credit rating: |
+      "affected"
+    duration in months: 36
+    home: |
+      "risk"
+    requirements:
+      Maximum Amount: 
+        formula_value: 5000
+      Minimum Number of Debts:
+        formula_value: 1 
+      Maximum Assets:
+        formula_value: 100000
+      Court Case Required:
+        formula_value: True
+  Individual Voluntary Agreement:
+    title: | 
+      "Individual Voluntary Agreement" 
+    blurb: | 
+      " An individual voluntary arrangement (IVA) is a formal and legally binding agreement between you and your creditors to pay back your debts over a period of time. This means it’s approved by the court and your creditors have to stick to it." 
+    cost: 4000
+    credit rating: |
+      "affected"
+    duration in months: 60
+    home: |
+      "safe"
+    requirements:
+      Maximum Amount:  
+        formula_value: 1000000
+      Maximum Assets:
+        formula_value: 100000
+---
+comment: |
+  This dictionary of debt solutions can be created with Airtable.
+  
+  
+id: Requirements
+variable name: debt_solutions_requirements
+use objects: True
+data from code:
+      Minimum Amount:
+        sample_formula: |
+          "(debt.total() < formula_value)"
+        formula_field: |
+          "min_amount" 
+        sample_reason: |
+          '"Your debt amount " + currency(debt.total()) + " do not meet the minimum requirments "+ currency(formula_value)'
+        formula_variables: |
+        	"Total Amount of Debt"
+      Maximum Assets:
+        sample_formula: |
+          "formula_value <= assets.total()"
+        formula_field: |
+          "assets"
+        sample_reason: |
+          '"you currently have assets worth "+currency(assets.total())+" which is more than what is required:  "+ currency(formula_value)'
+        formula_variables: |
+        	"Total Amount of Assests"
+      Maximum Income:
+        sample_formula: |
+          "month_disposble_income >= formula_value"
+        formula_field: |
+          "income"
+        sample_reason: |
+          '"Your net monthly income " + currency(month_disposble_income) + " exceeded maximum allowance "+ currency(formula_value)'
+        formula_variables: |
+        	"Monthly Disposable Income"
+      Nonhomeowner:
+        sample_formula: |
+          "user.house_status in formula_value"
+        formula_field: |
+            "homeowner"
+        reason: |
+          "Homeowners are not eligilbe for a Debt Relief Order"
+        formula_variables: |
+        	"Housing Status"
+      Minimum Number of Debts:
+        sample_formula: |
+          "len(debt) <=formula_value"
+        formula_field: |
+          "number"
+        sample_reason: |
+          '"you need to have more than 1 debts, you currently have: "+ str(len(debt))+" debts"'
+        formula_variables: |
+        	"Number of Debts"
+      Court Case Required: 
+        sample_formula: |
+          "court_case == formula_value"
+        formula_field: |
+          "court_case"
+        sample_reason: |
+          "An Administration Order is not applicable unless the debt is related to a court case."
+        formula_variables: |
+        	"A Debt in Court Action" 
+      Maximum Amount:
+        sample_formula: |
+          "formula_value < debt.total()"
+        formula_field: |
+          "amount"
+        sample_reason: |
+          '"Your debt amount " + currency(debt.total()) + " exceeded maximum allowance "+ currency(formula_value )'
+        formula_variables: |
+        	"Total Amount of Debt" 
+---
+comment: |
+  This dictionary of debt solutions can be created with Airtable.
+  
+  
+	id: Requirements
+	variable name: debt_solutions_requirements_formulas
+	use objects: True
+	data from code:
+		    Minimum Amount:
+		      formula: |
+		        debt_total < formula_value
+		    Maximum Assets:
+		      formula: |
+		        formula_value <= assets_total
+		    Maximum Income:
+		      formula: |
+		        month_disposble_income >= formula_value
+		    Nonhomeowner:
+		      formula: |
+		        user.house_status in formula_value
+		    Minimum Number of Debts:
+		      formula: |
+		        total_number_of_debt < formula_value
+		    Court Case Required:
+		      formula: |
+		        court_case == True
+---
+sets: debt_solutions[i]['requirements']['Minimum Amount']['formula']
+code: |
+  debt_solutions[i]['requirements']['Minimum Amount'].update({'formula':debt_total < formula_value})
+---
+sets: debt_solutions[i]['requirements']['Maximum Assets']['formula']
+code: |
+  debt_solutions[i]['requirements']['Maximum Assets'].update({'formula':formula_value <= assets_total})
+---
+sets: debt_solutions[i]['requirements']['Maximum Income']['formula']
+code: |
+  debt_solutions[i]['requirements']['Maximum Income'].update({'formula':month_disposble_income >= formula_value})
+---
+sets: debt_solutions[i]['requirements']['Nonhomeowner']['formula']
+code: |
+  debt_solutions[i]['requirements']['Nonhomeowner'].update({'formula':user.house_status in formula_value})
+---
+sets: debt_solutions[i]['requirements']['Court Case Required']['formula']
+code: |
+  debt_solutions[i]['requirements']['Court Case Required'].update({'formula':court_case == False})
+---
+sets: debt_solutions[i]['requirements']['Maximum Amount']['formula']
+code: |
+  debt_solutions[i]['requirements']['Maximum Amount'].update({'formula':formula_value < debt_total})
+---
+sets: debt_solutions[i]['requirements']['Minimum Number of Debts']['formula']
+code: |
+  debt_solutions[i]['requirements']['Minimum Number of Debts'].update({'formula':len(debt) < formula_value})
+---
+id: Requirement Variables
+variable name: requirement_variables
+data from code:
+			A Debt in Court Action:
+				label: |
+					"Debt in Court Action"
+				value: |
+					"court_case"
+				datatype: |
+					"yesno"
+			Number of Debts:
+				label: |
+					"Number of Debts"
+				value: |
+					"debt.target_number"
+				datatype: |
+					"integer"
+			Housing Status:
+				label: |
+					"Housing Status"
+				value: |
+					"user.house_status"
+				datatype: |
+					"radio"
+				choices: |
+					['Renting','Homeowner','Living with family','Homeless','Other']
+			Monthly Disposable Income:
+				label: |
+					"Monthly Disposable Income"
+				value: |
+					"month_disposble_income"
+				datatype: |
+					"number"
+			Total Amount of Assests:
+				label: |
+					"Total Amount of Assests"
+				value: |
+					"assets_total"
+				datatype: |
+					"number"
+			Total Amount of Debt:
+				label: |
+					"Total Amount of Debt"
+				value: |
+					"debt_total"
+				datatype: |
+					"number"
+---
+

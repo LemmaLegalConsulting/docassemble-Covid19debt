@@ -1,0 +1,125 @@
+---
+modules:
+  - .income
+---
+objects: 
+  - debt: ValueListNoObject.using(ask_number=True)
+  - user: Individual
+  - debt_solutions: DADict.using(auto_gather=False,gathered=True)
+  - debt_solutions[i].match_dict: DADict.using(auto_gather=False)
+---
+include:
+  - debt_solutions.yml
+---
+mandatory: True
+code: |
+	debt_solutions
+	debt_solutions_selected_for_testing
+	debt_solutions_filtered
+	question_code_created
+	question_code_completed
+	solutions_tested
+---
+question: Select the debt solutions you would like to test
+fields:
+  - no label: solutions_to_test
+    datatype: checkboxes
+    code: |
+      debt_solutions.keys()
+---
+code: |
+  for sol in debt_solutions.keys():
+    if sol in solutions_to_test.true_values():
+      debt_solutions[sol].test = True
+    else:
+      debt_solutions[sol].test = False
+  debt_solutions_selected_for_testing = True
+---
+only sets: debt_solutions_filtered
+code: |
+  debt_solutions = debt_solutions.slice(lambda y: y.test)
+  debt_solutions_filtered = True
+---
+code: |
+  selected_solutions_requirements = set()
+  for sol in debt_solutions.keys():
+  	selected_solutions_requirements.update(set(debt_solutions[sol]['requirements'].keys()))
+  selected_solutions_variables = set()
+  for req in selected_solutions_requirements:
+  	selected_solutions_variables.add(debt_solutions_requirements[req]['formula_variables'])	
+  question_code = list()
+  for var in selected_solutions_variables:
+		temp_dict = dict()
+		temp_dict['label'] = requirement_variables[var]['label']
+		temp_dict['field'] = requirement_variables[var]['value']
+		temp_dict['datatype'] = requirement_variables[var]['datatype']
+		if temp_dict['datatype'] == "radio":
+			temp_dict['choices'] = requirement_variables[var]['choices']
+		question_code.append(temp_dict)
+  question_code_created = True
+---
+question: Please the Following
+fields:
+  - code: |
+  	  question_code
+continue button field: question_code_completed
+---
+event: solutions_tested
+question: ${ Available_solutions }
+subquestion: |
+  The following debt solutions met the requirements:
+  % for asol in Available_solutions:
+  
+  **${ asol }**
+  
+  % for asol_req in Available_solutions[asol]['requirements'].keys():
+  - ${ asol_req }
+    - formula_value = ${ Available_solutions[asol]['requirements'][asol_req]['formula_value'] }
+    - ${ debt_solutions_requirements[asol_req]['sample_formula'] }
+  
+  % if Available_solutions[asol].match_dict[asol_req]:
+  REQUIREMENT NOT MET.
+  % else:
+  REQUIREMENT MET.
+  % endif
+  
+  % endfor
+  % endfor
+  
+  -------------------
+  
+  The following debt solutions did not meet the requirements:
+  % for asol in not_available_solution:
+  
+  **${ asol }**
+  
+  % for asol_req in not_available_solution[asol]['requirements'].keys():
+  - ${ asol_req }
+    - formula_value = ${ not_available_solution[asol]['requirements'][asol_req]['formula_value'] }
+    - ${ debt_solutions_requirements[asol_req]['sample_formula'] }
+  
+  % if not_available_solution[asol].match_dict[asol_req]:
+  REQUIREMENT NOT MET.
+  % else:
+  REQUIREMENT MET.
+  % endif
+  
+  % endfor
+  % endfor
+---
+
+####################### DEBT SOLUTION LOGIC ##############################
+id: debt solutions filtering
+code:  |
+  Available_solutions = debt_solutions.slice(lambda y: y.match_dict.all_false())
+---
+code: |
+  not_available_solution = debt_solutions.slice(lambda y: y.match_dict.any_true())
+---
+code: |
+  for req in debt_solutions[i]['requirements']:
+  	formula_value = debt_solutions[i]['requirements'][req]['formula_value']
+    debt_solutions[i].match_dict[req] = debt_solutions[i]['requirements'][req]['formula']
+  debt_solutions[i].match_dict.gathered = True
+---
+

@@ -21,6 +21,9 @@ modules:
   - docassemble.base.util
   - .income
 ---
+comment: |
+  ValueListNoObject, used for debt, is a child of ValueList that does not set the object_type for the debts in the list, which is also why ask_object_type is set to True.  This allows debt to collect debts of different classes, which are named in the debt_dict below under class_name, and are defined as a class in income.py.  (I recently eliminated the objects for priority_debts and nonpriority_debts, because they adopt debt's class since they are a filtered copy of debt.
+  
 objects:
   - user: Individual
   - jobs: JobList.using(complete_attribute='is_hourly')
@@ -29,8 +32,6 @@ objects:
   - income_assets: IncomeList.using(auto_gather=False)
   - expenses: PeriodicFinancialList.using(target_number=len(average_cost_living.keys()),complete_attribute='value',auto_gather=False)
   - debt: ValueListNoObject.using(there_are_any=True, ask_object_type=True, complete_attribute='complete')
-  - priority_debts: DAList.using(auto_gather=False)
-  - nonpriority_debts: DAList.using(auto_gather=False)
   - debt_parent_list: DAList.using(there_are_any=True)
   - debt_solutions: DADict.using(object_type=DAObject,complete_attribute = "complete")
   - debt_solutions[i].match_dict: DADict.using(auto_gather=False)
@@ -68,6 +69,16 @@ code: |
 comment: |
   This block adds Review Answers to the menu immediately.  It can be switch to only add review after a certain point in the interview, when all of the information is collected.  It does this because add_review_to_menu is initially set to false (in block id: set review to false) and then changed in the interview order to True.
 ---
+comment: 
+	The interview order controls the flow of the interview by inserting signposts and listing the order for docassemble to search for variables.  Signposts like 'user_saw_introduction' and 'debt_signpost' are used by continue button fields for pages that show information (usually using a template) but do not collect variables.
+	
+	We have also used conditional logic to 1) kick-out inappropriate users and to 2) list other variables to collect and even define some variables.  We may want to move the second set of logic to a separate code block, to avoid defining these variables every time the interview is run.  (However, this does keep it fresh.)
+	
+	After collecting user information by naming variables, the list of debts and the other lists of information are collected differently.  First, debt_parent_list[0] is called in order to set it to "Debt" to start the debt selection process as described below.  Then debt is called, which requires it to be gathered, and then a function from the income.py module .total() is called.  (debt uses a different method for .total() for ValueListNoObject then the other lists, which use the method in ValueList, but they are mostly similar.)
+	
+	At the
+	
+	
 id: interview order
 mandatory: True
 code: |
@@ -84,7 +95,6 @@ code: |
     nonUKdebt_kickout
   user.work
   user.uk_debt
-  #user_provided_personal_info
   user.house_status 
   if user.house_status == 'Renting': 
     user.renting_status 
@@ -111,12 +121,8 @@ code: |
   else:
     user_contact_information
   user.marriage
-
-  current_insolvency
+  current_insolvency 
   debt_info_signpost
-  
-  # user_identified_priority_debts
-  # user_identified_nonpriority_debts
   debt_parent_list[0]
   debt.total()
   finance_signpost
@@ -301,7 +307,7 @@ code: |
 ---
 ##################### USER INFORMATION ##################
 comment: |
-  User information is gathered in a fairly standard docassemble way, which is designed to be self-explanatory.  User variables can be found in the airtable at 
+  User information is gathered in a fairly standard docassemble way, which is designed to be self-explanatory.  User variables can be found in the airtable at ADD LINK
 ---
 id: personal information block
 section: personal_info
@@ -596,6 +602,8 @@ fields:
     datatype: integer
 back button: True
 ---
+comment: |
+  The information in this block is only used in the final report.  It could potentially be used in determining whether a breathing space is appropriate, or to mark if a specific debt is subject to the ongoing procedure.  This question code in this section could be populated by debt_solutions.  This could also be an attribute of user.
 id: personal insolvency 
 section: personal_info
 question: | 
@@ -624,6 +632,8 @@ code: |
                            'help': "An administration order is a county court order that prevents individual creditors from taking enforcement action without permission from the court and  requires that all your debts be dealt with together. An administration order can include a composition under which you are required to pay less than 10 pence in the pound in satisfaction of your debts"}
                         ]
 ---
+comment: |
+  This section sets is_homeowner and is_court_debt, which are used in the report but not in the logic.  The rule "Court Case Required" uses the variable.  This block should have a depends on in order to prevent these variables from becoming stale.  (Is there a problem with depending on a DAList like debt?)
 id: homeowner code
 code:  |
   is_homeowner = "Not Home Owner"
@@ -635,6 +645,9 @@ code:  |
     if item.court_action:
       court_case = False
       is_court_debt ="Have a Court Action"
+depends on:
+  - user.house_status
+  - debt
 ---
 id: debt information signpost
 section: debt_info
@@ -648,11 +661,28 @@ continue button field: debt_info_signpost
 ---
 ################# SELECTING DEBT TYPE ####################
 comment: |
+  For each debt the user enters, the type of debt is selected by using debt_parent_list, which should be undefined and refreshed each time.  The first type of debt added to each debt_parent_list is Debt, and the user is actually asked for the second type of debt in debt_parent_list.
+  
+  The order of this menu is determined by the 'more_specific' attribute for each type of debt in the debt_dict.  The ['more_specific'] attribute for Debt has the following:
+  
+  ["Credit Card", "Student Loans", "Payday loans", "Mortgage", "Bank overdraft", "Loans", "Rent arrears", "Consumer Debt", "Tax", "Penalties", "Child maintenance/child support agency debts", "Liability"]
+  
+  which are the choices the user sees when first asked what type of debt.  The question looks to the ['more_specific'] attribute of the last debt type in order to select the next one.  (These names aren't necessarily what the user sees - the labels for each debt (also listed in debt_dict) are used.)
+  
+  If "Tax" is selected, then the next choice for the user are the choices in ["Unpaid income tax, National Insurance or VAT", "TV license", "Non-domestic rates", "Council Tax", "Overpayment of benefits"].
+  
+  If the ['more_specific'] attribute is an empty list, then the interview will stop collecting debt_parent_list (debt_parent_list.there_is_another is set to False).  The debt type of the last item in debt_parent_list will set the object type for the first/next instance of debt in debt.  If None or Other is selected, it also ends the collection and gets rid of the last item in the debt_parent_list (named Other or None).  Anything entered into a text box for Other (if implemented) could be recorded here.  Types of debts that do not have a class in income.py could be used in a ['more_specific'] - then that type of debt would be stored as temp_sub_type and the last type of debt would be used for the class.
+  
+  In order to change the order of the questions, you would need to change debt_dict.  For example, 'Student Loans' could be moved out of debt_dict['Debt']['more_specific'] and into debt_dict['Loans']['more_specific']
 ---
 id: set new object type to last item in debt parent list
 code: |
   debt.new_object_type = debt_dict[debt_parent_list.last()]['class_name']
   temp_type = debt_parent_list.last()
+---
+id: adding debt to debt parent list automatically
+code: |
+  debt_parent_list[0] = "Debt"
 ---
 id: sets there_is_another for debt parent list
 code: |
@@ -693,6 +723,8 @@ reconsider:
   - debt_question_code
 back button: True
 ---
+comment: |
+  This block creates the question code and changes the labels for two types of debts.  It may be better to have 'alt_label' as an attribute.
 code: |
   debt_question_code = list()
   for dbt in debt_dict[debt_parent_list.complete_elements().last()]['more_specific']:
@@ -713,14 +745,6 @@ code: |
     tempdict['value'] = "None"
     debt_question_code.append(tempdict)
 ---
-id: other list
-code: |
-  other_list = ["Other"]
----
-id: adding debt to debt parent list automatically
-code: |
-  debt_parent_list[0] = "Debt"
----
 id: tracks whether there should be other_name attribute
 code: |
   temp_other_name_exists = False
@@ -736,7 +760,10 @@ code: |
 ---
 ################ COMPLETING DEBT ##################
 comment: |
-  The Debt list uses the "complete_attribute" feature for lists, where the interview will seek to define .complete gor each debt.  
+  The Debt list uses the "complete_attribute" feature for lists, where the interview will seek to define .complete for each debt entered by the user.  The code block that sets x.complete for Debt is like a mini interview order, making sure each attribute is 
+  These questions use the "generic object" feature, which allows you to write a question block that can be used for any debt that shares that class.  And because all of the classes for different debt types are subclasses of the class Debt, setting generic object: Debt will allow the question to be used for all debts.  
+  If you set generic object to a more specific debt type, like Loans, the more specific class will be used first, because of the way docassemble looks for variables.
+  
 ---
 id: Debt complete order
 generic object: Debt
@@ -785,7 +812,7 @@ code: |
 ---
 ################ X.VALUE ##################
 comment: |
-  The Debt list uses the "complete_attribute" feature for lists, where the interview will seek to define .complete gor each debt.  
+  Because debt is a ValueListNoObject, every debt must have an attribute "value", which is the amount of the debt.  value is used by the method .total()
 ---
 id: debt amount
 generic object: Debt
@@ -800,7 +827,8 @@ back button: True
 ---
 ################ X.NAME ##################
 comment: |
-  The Debt list uses the "complete_attribute" feature for lists, where the interview will seek to define .complete gor each debt.  
+  .name is used in the report and in other questions (and will be sought before value because it is used in the question for .value).  The temp_sub_type in the logic is intended for an "Other" field in the debt selection process, which isn't implemented now.  Normally, the name will simply be set to the type of the debt ("Rent arrears", for example).
+  The generic object for LoansDebt demonstrates how this can be changed for certain types of debt.  For LoansDebt (credit cards, mortgages...), the name includes the creditor, so in the summary table it will say something like "Visa credit card".
 ---
 id: .name for Debt
 generic object: Debt
@@ -817,6 +845,8 @@ code: |
   x.name = x.creditor +" " + x.type
 ---
 ######################### X.CREDITOR ##########################
+comment: |
+  Making generic objects to set creditor is useful because it allows a default answer, if there is likely to be one answer for creditor, such as "The Crown" for NationalTax.
 ---
 id: .creditor for Debt
 generic object: Debt
@@ -854,7 +884,7 @@ back button: True
 id: .creditor for Traffic Fines
 generic object: NationalTax
 question: | 
-  Who is enforcing the traffic fine?
+  Who is collecting the taxes?
 fields:
   - Creditor name: x.creditor
     default: The Crown
@@ -862,7 +892,7 @@ back button: True
 ---
 ######################### X.COURT_ACTION ##########################
 comment: |
-  Priority
+  This question was created to make sure the interview always asked if there was a related court action, since it is used in the logic to determine if an "Administration Order" is an appropriate debt solution.  It can be duplicative - there may be a question about a court case in the urgency section as well.  It may be better to have 
 ---
 generic object: Debt
 question: Is there a court action involving this debt?
@@ -873,29 +903,38 @@ back button: True
 ---
 ################ X.URGENCY ##################
 comment: |
-  The Debt list uses the "complete_attribute" feature for lists, where the interview will seek to define .complete gor each debt.  
+  The urgency attribute signifies if a debt requires immediate, emergency action, as described in Section 4 in Chapter 8 of the Debt Advice Handbook.
+    In most circumstances, the user sets the urgency attribute by checking boxes for to choose emergency situations associated with that type of debt - for example, "a fuel disconnection" is an emergency situation for the debt type class EnergyBillArrears.  The list for debt types (which could be, and often is, a list of one choice) can be updated or added to as shown below.
+    The two variables can be confusing:
+      - x.emergency_choices is the list of possible emergency situations for a debt type. It creates the list the user chooses
+      - x.emergency_dict records the user's choices, in a DADict where the key is the name of the choice and the value is True or False, depending on what the user chooses.
+    Alternatively, if it is easier to determine it is an urgent situation by asking questions about specific facts, then x.urgency can be set by generic object questions and code blocks, as demonstrated below for RentDebt
 ---
-id: gets to urgency for Debt
-generic object: Debt
-question: | 
-  Has the creditor threatened to take immediate action against your fuel supply, property, or threatened you with imprisonment?
-subquestion: | 
-  This can considered an urgent situation. Check the box if any of these apply to this debt. 
-fields:
-  - The creditor threatened action: x.is_urgent
-    datatype: yesnoradio
-  - Explain what happened : x.urgency_reason
-    show if:
-      variable: x.is_urgent
-      is: True
-back button: True
+#id: gets to urgency for Debt
+#generic object: Debt
+#question: | 
+#  Has the creditor threatened to take immediate action against your fuel supply#, property, or threatened you with imprisonment?
+#subquestion: | 
+#  This can considered an urgent situation. Check the box if any of these apply #to this debt. 
+#fields:
+#  - The creditor threatened action: x.is_urgent
+#    datatype: yesnoradio
+#  - Explain what happened : x.urgency_reason
+#    show if:
+#      variable: x.is_urgent
+#      is: True
+#back button: True
 ---
+comment: |
+  There are three blocks that use the "if" feature, depending on whether the number of emergency choices for a particular type of debt is less than, equal to, or more than 1.  If it there are no emergency choices, then x.emergency_dict is created by code and.  (This is a workaround because using checkboxes creates a DADict automatically
 sets: x.emergency_dict
 if: number_of_emergency_choices < 1
 generic object: Debt
 code: |
   x.initializeAttribute('emergency_dict', DADict.using(auto_gather=False,gathered=True))
 ---
+comment: |
+  If there is only one choice, this question will ask a yes or no question about whether the emergency situation applies.
 if: number_of_emergency_choices == 1
 generic object: Debt
 question: Are you at risk of ${ i } for ${ x.name.lower() }?
@@ -904,12 +943,6 @@ subquestion: |
 fields:
   - no label: x.emergency_dict[i]
     datatype: yesnoradio
----
-#sets: x.emergency_dict
-#generic object: Debt
-#code: |
-#  x.initializeAttribute('emergency_dict', DADict.using(auto_gather=False,gathered=True))
-#  x.emergency_dict[x.emergency_choices[0]] = x.emergency_dict_temp
 ---
 if: number_of_emergency_choices > 1
 generic object: Debt
@@ -924,6 +957,8 @@ fields:
       x.emergency_choices
 back button: True
 ---
+comment: |
+  Because the above conditional blocks depend on number_of_emergency_choices, this code  block will be run before the questions above.  If there is only one choice, there will only be one 
 generic object: Debt
 code: |
   if len(x.emergency_choices) > 1:
@@ -934,6 +969,12 @@ code: |
   else:
     x.initializeAttribute('emergency_dict', DADict.using(auto_gather=False,gathered=True))
     number_of_emergency_choices = len(x.emergency_choices)
+---
+comment: |
+  The only time that the interview will look for x.emergency_dict.new_item_name is when number of emergency choices is 1.
+generic object: Debt
+code: |
+  x.emergency_dict.new_item_name = x.emergency_choices[0]
 ---
 comment: |
   After the user completes the .emergency_dict checkboxes, this box determines if any of the reasons were checked and sets x.urgency to a string of all the checked boxes.
@@ -947,11 +988,7 @@ code: |
 depends on: x.emergency_dict
 ---
 comment: |
-  The only time that the interview will look for x.emergency_dict.new_item_name is when number of emergency choices is 1.
-generic object: Debt
-code: |
-  x.emergency_dict.new_item_name = x.emergency_choices[0]
----
+  This section sets .urgency_boolean, which is used to filter urgent debts from non-urgent debts.
 id: changes urgency to True or False
 depends on:
   - debt[i].urgency
@@ -962,6 +999,10 @@ code: |
     debt[i].urgency_boolean = True
 ---
 ################### EMERGENCY CHOICES FOR X.URGENCY #####################
+comment: |
+  x.emergency_choices needs to be set to a list of strings.  Ideally, the strings are standard labels for common types of emergencies.
+  The Airtable allows you to create a list of emergencies by choosing from a standard list in another table.  The docassemble code blocks below can be curt and paste from the Airtable.
+  
 generic object: Debt
 code: |
   x.emergency_choices = []
@@ -1022,7 +1063,7 @@ generic object: CouncilTax
 code: |
   x.emergency_choices = ["your essential personal property being seized","a bankruptcy proceeding for taxes"]    
 ---
-################# END OF EMERGENCY CHOICES ###################
+################# URGENCY ALT METHOD ###################
 comment: |
   These blocks below override the .emergency_choices method to determine urgency.
 id: .urgency for CreditCardDebt
@@ -1035,7 +1076,8 @@ generic object: PenaltyChargeDebt
 code: |
   x.urgency = "None"
 ---
-################## URGENCY VARIABLES #######################
+comment: |
+  This block creates a new variable to help determine urgency.  If this method is used, then it is good to add the same variables to the x.notes section below.
 id: gets to .urgency for RentDebt
 generic object: RentDebt
 question: Has a possession order been granted against you?
@@ -1060,8 +1102,14 @@ code: |
 ---
 ######################### X.PRIORITY FORMULAS ##########################
 comment: |
-  Priority
+  The priority attribute helps determine if a debt should be dealt with as a priority debt, as defined in Chapter 8 of the Debt Advice Handbook, or a non-priority debt, as defined by Chapter 9.  Some types of debt may always be considered a priority, others
+  
+  Priority is set in two parts, usually.  First, there is a generic object with logic that determines whether a debt is considered a priority.  This logic may include other variables, which are defined in the second block.
+  
+  The Priority Hierarchy View in the solutions table and the Priority Variables View in the variables table in the Airtable can help this section be created.  In the Priority Hierarchy View, there is a field for the logic, and next to that you can link to or add any variables used in that logic.  By doing so, that variable will be added to the Priority Variables view, where question and other information can be added.  The code and question blocks below can then be cut and paste from the Airtable.
 ---
+comment: |
+  It might seem like some of the blocks are inaccurate - for example, LoansDebt seems to set x.priority to False, and there are types of loans, like mortgages, that may be a priority debt.  However, this block only set x.priority to False for a LoansDebt subclass if there is not a generic object block for the more specific subset.
 generic object: LoansDebt
 code: |
   x.priority = False
@@ -1230,15 +1278,9 @@ fields:
     datatype: yesnoradio
 back button: True
 ---
-########################## END OF PRIORITY VARIABLES ##########################
-comment: |
-  This dictionary of debt solutions can be created with Airtable.
-  
-  
----
 ######################### X.DETAILS ##########################
 comment: |
-  Priority
+  This section allows additional attributes for debt types to be added.
 ---
 id: details order, default for debt
 generic object: Debt
@@ -1259,16 +1301,6 @@ fields:
     show if: x.delinquent
 back button: True
 ---
-id: goods as described
-generic object: Debt
-question:
-fields:
-  - Were the goods purchased as described?: x.goods_as_described
-    datatype: yesnoradio
-  - Were the goods purchased of satisfactory quality?: x.goods_satisfactory_quality
-    datatype: yesnoradio
-back button: True
----
 ######################### X.NOTES ##########################
 comment: |
   This section creates a notes attribute, which collects the attributes specific to that debt type.
@@ -1284,9 +1316,9 @@ code: |
   if not defined('x.notes'):
     x.notes = ""
   if x.delinquent:
-    x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
+    x.notes += "First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
-    x.notes += "NOT DELINQUENT"
+    x.notes += "No missed payments."
   x.notes_finished = True
 ---
 depends on:
@@ -1296,9 +1328,9 @@ id: notes for Pawnbroker
 generic object: Pawnbroker
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
+    x.notes = "First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
-    x.notes = "NOT DELINQUENT  "
+    x.notes = "No missed payments.  "
   if x.for_essential_services:
     x.notes += "For essential goods."
   else:
@@ -1312,9 +1344,9 @@ id: notes for HirePurchase
 generic object: HirePurchase
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
+    x.notes = "First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
-    x.notes = "NOT DELINQUENT  "
+    x.notes = "No missed payments.  "
   if x.for_essential_services:
     x.notes += "For essential goods."
   else:
@@ -1329,9 +1361,9 @@ id: notes for CreditCardDebt
 generic object: CreditCardDebt
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
+    x.notes = "First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
-    x.notes = "NOT DELINQUENT  "
+    x.notes = "No missed payments.  "
   if not x.goods_as_described:
     x.notes += "Includes payments for misrepresented goods.  "
   if not x.goods_satisfactory_quality:
@@ -1346,9 +1378,9 @@ id: notes for Mortgage
 generic object: Mortgage
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
+    x.notes = "First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
-    x.notes = "NOT DELINQUENT  "
+    x.notes = "No missed payments.  "
   if x.is_current_home:
     x.notes += "For current home."
   else:
@@ -1361,9 +1393,9 @@ id: notes for ConsumerDebt
 generic object: ConsumerDebt
 code: |
   if x.delinquent:
-    x.notes = "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date) + ".  "
+    x.notes = "First missed payment date: " + format_date(x.first_miss_date) + ".  "
   else:
-    x.notes = "NOT DELINQUENT"
+    x.notes = "No missed payments."
   x.notes_finished = True
 ---
 depends on:
@@ -1429,19 +1461,30 @@ code: |
   else:
     x.notes = "No repossession scheduled.  "
   if x.delinquent:
-    x.notes += "DELINQUENT. First missed payment date: " + format_date(x.first_miss_date)
+    x.notes += "First missed payment date: " + format_date(x.first_miss_date)
   else:
-    x.notes += "NOT DELINQUENT  "
+    x.notes += "No missed payments.  "
   if x.is_current_home:
     x.notes += "For current home."
   else:
     x.notes += "Not for current home."
   x.notes_finished = True
 ---
+comment: |
+  These variables are used in x.notes for CreditCardDebt and will be asked.
+id: goods as described
+generic object: Debt
+question:
+fields:
+  - Were the goods purchased as described?: x.goods_as_described
+    datatype: yesnoradio
+  - Were the goods purchased of satisfactory quality?: x.goods_satisfactory_quality
+    datatype: yesnoradio
+back button: True
+---
 ######################### DEBT SUMMARY ##########################
 comment: |
-  Priority
----
+  The debt summary combines a table of the existing debt already collected with variable that sets x.there_is_another, which is required by the docassemble gathering process. It can do this because debt.table has "required gathered" set to False.
 id: debt summary  
 section: debt_info
 question: |
@@ -1455,6 +1498,8 @@ buttons:
   - "Add another debt": True
   - "Continue to next section": False
 ---
+comment: |
+    debt.there_is_anotherstep is used to ensure that certain variables are undefined before the next debt is gathered.  There are better ways to do this.
 id: sets debt.there_is_another and undefines
 code: |
   if debt.there_is_anotherstep:
@@ -1480,7 +1525,7 @@ edit:
 ---
 ############################## REVIEW TABLE ##############################
 comment: |
-  
+  The "Add variables to review" View in the variables table allows the blocks below to be cut and pasted from the Airtable.
 ---
 event: debt[i].review_variable
 question: |
@@ -1661,6 +1706,7 @@ continue button field: user_saw_mentalh_bs
 ---
 ############################## INCOME COLLECTION #################################
 comment: |
+  Income and assets are collected in the standard way in income.py.
 ---
 id: type of income information selection
 question:  |
@@ -1892,6 +1938,9 @@ reconsider:
 ---
 ############################### EXPENSES ###################################
 comment: |
+  Expenses is set up differently, to allow the collection of many expenses on one page
+  
+  To change the list or categories of expenses, the average_cost_living dictionary needs to be edited.  If categories or added or removed, the code below would have to change so that the number of fields (currently 13) matches the number of categories in the list.
 ---
 id: expense information collection
 question: |
@@ -2242,8 +2291,6 @@ code:  |
   month_disposble_income = jobs.total(period_to_use=12) + other_income.total(period_to_use=12) + income_assets.total(period_to_use=12)- expenses.total(period_to_use=12)
 ---
 ################################# PREFERENCES ###################################
-comment: |
-  
 ---
 id: preferences information collection
 question:  |
@@ -2477,6 +2524,8 @@ terms:
   
 ---
 ####################### DEBT SOLUTION LOGIC ##############################
+comment: |
+  The DADict method slice is used to make another copy of debt_solutions when match_dict is all false.  
 id: debt solutions filtering
 code:  |
   Available_solutions = debt_solutions.slice(lambda y: y.match_dict.all_false())
@@ -2484,11 +2533,16 @@ code:  |
 code: |
   not_available_solution = debt_solutions.slice(lambda y: y.match_dict.any_true())
 ---
+comment: |
+  To determine .match_dict, each requirement's formula is called.  If that requirement formula evaluates to False, then the user meets that requirement for the debt solution. 
+
 code: |
   for req in debt_solutions[i]['requirements']:
    debt_solutions[i].match_dict[req] = debt_solutions[i]['requirements'][req]['formula']
   debt_solutions[i].match_dict.gathered = True
 ---
+comment: |
+  Dro_notcover_list is used by the Debt Solutions page.  An expansion of debt types or debt solutions, that associates allowed debt types with debt solutions, should replace this.
 id: debt relief order relevant debts filtering
 code:  |
   Dro_notcover_list=['TV license','Court Fine/ Penalty charge','Student Loans','Child maintenance/child support agency debts','Claims against you for damage or personal injury','Criminal fines']
@@ -2506,6 +2560,7 @@ code:  |
 ---
 #################### PREDOCX VARIABLES ################################
 comment: |
+  This makes sure that all of these variables are defined before a docx is assembled, because undefined variables in a docx can increase processing time.
 id: collect variables before docx assembled
 code: |
   total_annual_income
@@ -2661,7 +2716,8 @@ attachment:
 ---
 ########################## DEBT DICTIONARY ##########################
 comment: |
-  This is a simple dict (not DADict) that is used to order how a user can select a type of debt
+  This is a simple dict (not DADict) that is used to order how a user can select a type of debt.
+  The debt dictionary creator View in the debt_type table in the Airtable can make it easy to update and add, which can be cut and paste here.
 code: |
   debt_dict = {
     'Debt':
@@ -2706,9 +2762,9 @@ code: |
     'Liability':
       {
        'class_name': LiabilityDebt,
-       'label':"Lawsuits against you",
-       'help': "Lawsuits against you includes: [BR] Shoplifting recover [BR] Clams against you for damage or personal injury",
-       'more_specific_question':"What kind of lawsuit?",
+       'label':"Court actions against you",
+       'help': "Court actions against you includes: [BR] Shoplifting recover [BR] Clams against you for damage or personal injury",
+       'more_specific_question':"What kind of court action?",
         'more_specific':["Shoplifting recovery", "Claims against you for damage or personal injury"]
       },
     'Loans':
@@ -2993,6 +3049,7 @@ code: |
 ---
 ########################## DEBT SOLUTIONS DICTIONARY ##########################
 comment: |
+  This block sets 'details' to the right docx template variable, because this does not work in the data from code block.  I removed a Mandatory: True because it wasn't being used - this block was being called by the final letter docx template before it would call it because it was mandatory.  I included it in the predocx variables code, but it doesn't appear to make a difference in processing time.
 code: | 
   debt_solutions['Bankruptcy']['details'] = bankruptcy_information
   debt_solutions['Administration Order']['details'] = administration_order
@@ -3001,8 +3058,8 @@ code: |
   debt_solutions_details_added = True
 ---
 comment: |
-  This dictionary of debt solutions can be created with Airtable.
-  
+  The big drawback to this using data from code is that all of the data in the block is evaluated when debt_solutions is called.  That means debt_solutions can't be called until the user is ready to complete all of the questions required by each and every formula in debt_solutions.
+  I created another yaml file called debt_solutions.yml that fixes this problem, by separating the requirements attributes into docassemble code blocks.  The other benefit of debt_solutions.yml is that it can be used by other interviews like logic_tester.yml.
   
 id: Debt Solutions 
 variable name: debt_solutions
