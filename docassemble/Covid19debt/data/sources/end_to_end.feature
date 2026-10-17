@@ -10,7 +10,7 @@ Feature: Complete Covid19debt
       | acknowledged_information_use['I accept the terms of use.'] | True |
       | user.name.first | Alex |
       | user.name.last | Example |
-      | user.dob | today - 16 years |
+      | user.dob | today - 5844 |
       | user.gender | Nonbinary |
     Then the question id should be "under 18 contact"
     And I should see the phrase "you should contact a debt advisor"
