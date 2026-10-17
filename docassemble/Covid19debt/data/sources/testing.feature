@@ -60,7 +60,7 @@ Scenario: Roderick Gwynyth
     | acknowledged_information_use['minimum_number'] | None |  |
     | acl_loop_counter | 13 |  |
     | add_review_to_menu | True |  |
-    | another_debt_solution | None |  |
+    | another_debt_solution['None'] | True |  |
     | asset | assets[4] |  |
     | asset.generates_income | False |  |
     | asset.type | trust |  |
@@ -89,7 +89,7 @@ Scenario: Roderick Gwynyth
     | assets.minimum_number | None |  |
     | assets.revisit | True |  |
     | assets.there_are_any | True |  |
-    | assets.there_is_another | --- invalid. See docs at https://suffolklitlab.org/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing/#there_is_another-loop ---  |  |
+    | assets.target_number | 5 |  |
     | average_cost_living['CHILDCARE'] | Full-time childcare may cost over £200 a week. Help with these costs may be available. See gov.uk/help-with-childcare-costs. |  |
     | average_cost_living['CLOTHING AND SHOES'] | These are often bought seasonally and so costs must be estimated annually and divided. It is important to include all small items in this category. |  |
     | average_cost_living['FINES'] | Instalments payable on fines should be included. See Chapter 13 for ways of reducing these. |  |
@@ -160,7 +160,7 @@ Scenario: Roderick Gwynyth
     | debt.minimum_number | None |  |
     | debt.revisit | True |  |
     | debt.there_are_any | True |  |
-    | debt.there_is_another | --- invalid. See docs at https://suffolklitlab.org/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing/#there_is_another-loop ---  |  |
+    | debt.target_number | 4 |  |
     | debt_dict['Bank overdraft']['class_name'].name | docassemble.playground47.income.BankOverdraft |  |
     | debt_dict['Bank overdraft']['label'] | Bank overdraft |  |
     | debt_dict['Bill of Sale']['class_name'].name | docassemble.playground47.income.BillOfSale |  |
@@ -335,7 +335,7 @@ Scenario: Roderick Gwynyth
     | debt_parent_list.minimum_number | None |  |
     | debt_parent_list.revisit | True |  |
     | debt_parent_list.there_are_any | True |  |
-    | debt_parent_list.there_is_another | --- invalid. See docs at https://suffolklitlab.org/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing/#there_is_another-loop ---  |  |
+    | debt_parent_list.target_number | 2 |  |
     | debt_question_code[0]['label'] | Credit card |  |
     | debt_question_code[0]['value'] | Credit Card |  |
     | debt_question_code[1]['label'] | Student Loans |  |
@@ -590,7 +590,7 @@ Scenario: Roderick Gwynyth
     | jobs.minimum_number | None |  |
     | jobs.revisit | True |  |
     | jobs.there_are_any | True |  |
-    | jobs.there_is_another | --- invalid. See docs at https://suffolklitlab.org/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing/#there_is_another-loop ---  |  |
+    | jobs.target_number | 1 |  |
     | loopcounter | 0 |  |
     | menu_items[0]['label'] | Review Answers |  |
     | menu_items[0]['url'] | /interview?action=eyJhY3Rpb24iOiAicmV2aWV3X2Fuc3dlcnMiLCAiYXJndW1lbnRzIjoge319&i=docassemble.playground47%3ADebtReport.yml |  |
@@ -619,7 +619,7 @@ Scenario: Roderick Gwynyth
     | user.homeowner_status | Joint Mortgage |  |
     | user.house_aware | True |  |
     | user.house_num | 3 |  |
-    | user.house_status | Home owner |  |
+    | user.house_status | Homeowner |  |
     | user.house_status_mortshare | Roderick and partner purchased the home together in March 2019 for £246,000. |  |
     | user.location.known | False |  |
     | user.marriage | Married |  |
@@ -700,7 +700,7 @@ Scenario: Bleddyn Maxen
     | acknowledged_information_use['minimum_number'] | None |  |
     | acl_loop_counter | 13 |  |
     | add_review_to_menu | True |  |
-    | another_debt_solution | None |  |
+    | another_debt_solution['None'] | True |  |
     | assets.minimum_number | None |  |
     | assets.revisit | True |  |
     | assets.there_are_any | False |  |
@@ -810,7 +810,7 @@ Scenario: Bleddyn Maxen
     | debt.minimum_number | None |  |
     | debt.revisit | True |  |
     | debt.there_are_any | True |  |
-    | debt.there_is_another | --- invalid. See docs at https://suffolklitlab.org/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing/#there_is_another-loop ---  |  |
+    | debt.target_number | 5 |  |
     | debt_dict['Bank overdraft']['class_name'].name | docassemble.playground47.income.BankOverdraft |  |
     | debt_dict['Bank overdraft']['label'] | Bank overdraft |  |
     | debt_dict['Bill of Sale']['class_name'].name | docassemble.playground47.income.BillOfSale |  |
@@ -986,7 +986,7 @@ Scenario: Bleddyn Maxen
     | debt_parent_list.minimum_number | None |  |
     | debt_parent_list.revisit | True |  |
     | debt_parent_list.there_are_any | True |  |
-    | debt_parent_list.there_is_another | --- invalid. See docs at https://suffolklitlab.org/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing/#there_is_another-loop ---  |  |
+    | debt_parent_list.target_number | 3 |  |
     | debt_question_code[0]['label'] | Unpaid income tax, National Insurance or VAT |  |
     | debt_question_code[0]['value'] | Unpaid income tax, National Insurance or VAT |  |
     | debt_question_code[1]['label'] | TV license |  |
@@ -1231,7 +1231,7 @@ Scenario: Bleddyn Maxen
     | jobs.minimum_number | None |  |
     | jobs.revisit | True |  |
     | jobs.there_are_any | True |  |
-    | jobs.there_is_another | --- invalid. See docs at https://suffolklitlab.org/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing/#there_is_another-loop ---  |  |
+    | jobs.target_number | 1 |  |
     | loopcounter | 0 |  |
     | menu_items[0]['label'] | Review Answers |  |
     | menu_items[0]['url'] | /interview?action=eyJhY3Rpb24iOiAicmV2aWV3X2Fuc3dlcnMiLCAiYXJndW1lbnRzIjoge319&i=docassemble.playground47%3ADebtReport.yml |  |
