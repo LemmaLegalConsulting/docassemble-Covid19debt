@@ -311,7 +311,7 @@ fields:
   - First Name: user.name.first
   - Last Name: user.name.last
   - Date of Birth: user.dob
-    datatype: BirthDate
+    datatype: date
   - Gender: user.gender
     required: False
     choices:
