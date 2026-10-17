@@ -867,7 +867,7 @@ comment: |
 generic object: Debt
 question: Is there a court action involving this debt?
 fields:
-  - : x.court_action
+  - no label: x.court_action
     datatype: yesnoradio
 back button: True
 ---
@@ -1040,7 +1040,7 @@ id: gets to .urgency for RentDebt
 generic object: RentDebt
 question: Has a possession order been granted against you?
 fields:
-  - : x.possession_order
+  - no label: x.possession_order
     datatype: yesnoradio
   - Date the property will be repossessed: x.repossession_date
     datatype: date
@@ -1226,7 +1226,7 @@ back button: True
 generic object: Debt
 question: Is there money in the account that the bank can take to pay the debt? 
 fields:
-  - : x.money_in_account
+  - no label: x.money_in_account
     datatype: yesnoradio
 back button: True
 ---
